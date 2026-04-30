@@ -26,17 +26,7 @@ use Illuminate\Support\Facades\Auth;
 */
 Route::view('/coming', 'website.home');
 
-Route::get('/test-mail', function() {
-    try {
-        \Mail::raw('Test email from Zawjahaa - cPanel SMTP', function($message) {
-            $message->to('ja9575554@gmail.com')
-                    ->subject('✅ cPanel SMTP Test');
-        });
-        return '✅ Email sent successfully!';
-    } catch (\Exception $e) {
-        return '❌ Error: ' . $e->getMessage();
-    }
-});
+
 // Public routes
 Route::view('/', 'website.index')->name('website');
 Route::view('/betasearch', 'website.newsearch');
