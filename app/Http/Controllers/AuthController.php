@@ -323,7 +323,6 @@ class AuthController extends Controller
         }
     }
 
-    // Dashboard page
     public function dashboard()
     {
         return view('website.index');
