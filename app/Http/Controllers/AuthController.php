@@ -14,18 +14,15 @@ use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
-    // Show Register Form
     public function showRegister()
     {
         return view('website.index');
     }
-    // Show Login Form
     public function showLogin()
     {
         return view('auth.login');
     }
 
-    // ===== CHECK DUPLICATES BEFORE REGISTRATION =====
     public function checkEmail(Request $request)
     {
         $exists = User::where('email', $request->email)->exists();
@@ -127,12 +124,9 @@ class AuthController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
-
-        // ✅ CLEAN DATA
         $phone = preg_replace('/[^0-9]/', '', $request->phone);
         $cnic = preg_replace('/[^0-9]/', '', $request->cnic);
 
-        // ✅ IMAGE UPLOAD (SAFE)
         $profileImagePath = null;
 
         if ($request->hasFile('profile_image')) {
@@ -151,7 +145,6 @@ class AuthController extends Controller
             $profileImagePath = 'uploads/profiles/' . $imageName;
         }
 
-        // ✅ CREATE USER
         $user = User::create([
             'name' => $request->first_name . ' ' . $request->last_name,
             'first_name' => $request->first_name,
@@ -225,10 +218,8 @@ class AuthController extends Controller
                 ->with('error', 'Please fix the errors below.');
         }
 
-        // Clean phone number
         $phone = preg_replace('/[^0-9+]/', '', $request->phone);
 
-        // Find user by phone
         $user = User::where('phone', $phone)->first();
 
         if (!$user) {
@@ -243,7 +234,6 @@ class AuthController extends Controller
                 ->withInput();
         }
 
-        // Attempt login
         if (Auth::attempt(['phone' => $phone, 'password' => $request->password], $request->boolean('remember'))) {
             $request->session()->regenerate();
             $loggedUser = Auth::user();
@@ -266,8 +256,6 @@ class AuthController extends Controller
             return redirect()->intended($redirect)
                 ->with('success', 'Login successful!');
         }
-
-        // Password incorrect
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => false,
@@ -280,13 +268,11 @@ class AuthController extends Controller
             ->withInput();
     }
 
-    // ===== UPDATE PROFILE =====
     public function update(Request $request)
     {
         try {
             $user = Auth::user();
 
-            // Validate inputs including optional profile image
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email,' . $user->id,
@@ -305,22 +291,18 @@ class AuthController extends Controller
 
             ]);
 
-            // Handle profile image upload
             if ($request->hasFile('profile_image')) {
                 $image = $request->file('profile_image');
                 $imageName = 'profile_' . $user->id . '_' . time() . '.' . $image->getClientOriginalExtension();
 
-                // Save image to public/uploads/profiles
                 $image->move(public_path('uploads/profiles'), $imageName);
                 $validated['profile_image'] = '/uploads/profiles/' . $imageName;
 
-                // Delete old image if exists
                 if ($user->profile_image && file_exists(public_path($user->profile_image))) {
                     @unlink(public_path($user->profile_image));
                 }
             }
 
-            // Update user data
             $user->update($validated);
 
             return response()->json([
